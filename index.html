@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Park N Go – Smart Parking Platform</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root{
+--bg:#070814;
+--panel:#0f172a;
+--gold:#f4c463;
+--blue:#3b82f6;
+--red:#ef4444;
+--muted:#94a3b8;
+}
+
+*{box-sizing:border-box;font-family:Inter,system-ui}
+body{
+margin:0;
+background:
+radial-gradient(circle at 20% 30%, rgba(244,196,99,.15), transparent 40%),
+radial-gradient(circle at 80% 70%, rgba(59,130,246,.15), transparent 45%),
+var(--bg);
+color:white;
+min-height:100vh;
+}
+
+/* ================= NAV ================= */
+.top-nav{
+position:sticky;
+top:0;
+z-index:200;
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:18px 50px;
+background:rgba(7,8,20,.9);
+backdrop-filter:blur(12px);
+border-bottom:1px solid rgba(255,255,255,.08);
+}
+
+.brand{
+font-weight:900;
+font-size:1.2rem;
+color:var(--gold);
+letter-spacing:1px;
+}
+
+.nav-right{
+display:flex;
+gap:26px;
+font-size:.85rem;
+color:#cbd5f5;
+}
+
+.nav-item{
+position:relative;
+cursor:pointer;
+}
+
+.nav-item:hover{color:var(--gold)}
+
+.nav-dropdown{
+display:none;
+position:absolute;
+top:36px;
+right:0;
+width:340px;
+background:rgba(15,23,42,.96);
+padding:18px;
+border-radius:16px;
+box-shadow:0 30px 80px rgba(0,0,0,.7);
+}
+
+.nav-item:hover .nav-dropdown{display:block}
+
+.nav-dropdown h4{
+color:var(--gold);
+margin-bottom:10px;
+font-size:.9rem;
+}
+
+.nav-dropdown p,
+.nav-dropdown li{
+font-size:.75rem;
+color:var(--muted);
+margin-bottom:6px;
+line-height:1.4;
+}
+
+.price-box{
+background:rgba(255,255,255,.05);
+border:1px solid rgba(255,255,255,.08);
+border-radius:12px;
+padding:10px;
+margin-bottom:8px;
+}
+
+/* ================= AUTH ================= */
+#auth{
+min-height:calc(100vh - 80px);
+display:flex;
+align-items:center;
+justify-content:center;
+}
+
+.auth{
+background:rgba(15,23,42,.8);
+padding:45px;
+width:420px;
+border-radius:26px;
+box-shadow:0 40px 90px rgba(0,0,0,.7);
+}
+
+.auth h2{
+text-align:center;
+color:var(--gold);
+margin-bottom:8px;
+}
+
+.auth p{
+text-align:center;
+font-size:.8rem;
+color:var(--muted);
+margin-bottom:20px;
+}
+
+.auth input,
+.auth select{
+width:100%;
+padding:14px;
+margin-bottom:14px;
+background:#020617;
+border:1px solid rgba(255,255,255,.15);
+border-radius:12px;
+color:white;
+}
+
+button{
+width:100%;
+padding:14px;
+border:none;
+border-radius:14px;
+font-weight:900;
+cursor:pointer;
+background:linear-gradient(135deg,#f4c463,#eab308);
+}
+
+/* ================= APP ================= */
+#app{display:none}
+
+.dashboard{
+display:grid;
+grid-template-columns:240px 1fr;
+min-height:100vh;
+}
+
+.sidebar{
+background:#020617;
+padding:25px;
+border-right:1px solid rgba(255,255,255,.1);
+}
+
+.stat{margin-bottom:18px}
+.stat small{color:var(--muted)}
+.stat h2{color:var(--gold)}
+
+.main{padding:30px}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(10,1fr);
+gap:8px;
+background:rgba(0,0,0,.4);
+padding:20px;
+border-radius:20px;
+}
+
+.spot{
+height:46px;
+border-radius:4px;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:.7rem;
+cursor:pointer;
+}
+
+.free{background:#020617;border:1px solid #1e293b}
+.locked{background:var(--blue)}
+.booked{background:var(--red)}
+
+/* ================= MODALS ================= */
+.overlay{
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.85);
+display:none;
+align-items:center;
+justify-content:center;
+}
+
+.card{
+background:white;
+color:black;
+padding:30px;
+border-radius:20px;
+width:320px;
+text-align:center;
+}
+</style>
+</head>
+
+<body>
+
+<!-- NAV -->
+<nav class="top-nav">
+  <div class="brand">🚗 PARK N GO</div>
+
+  <div class="nav-right">
+    <div class="nav-item">About
+      <div class="nav-dropdown">
+        <h4>About Park N Go</h4>
+        <p>Smart parking platform reducing congestion, uncertainty and revenue loss.</p>
+        <p>Built for owners and Ola/Uber drivers.</p>
+      </div>
+    </div>
+
+    <div class="nav-item">Why Us
+      <div class="nav-dropdown">
+        <h4>Why Choose Us</h4>
+        <ul>
+          <li>Real-time slot availability</li>
+          <li>Instant spot locking</li>
+          <li>Driver & vehicle tracking</li>
+          <li>Overstay monitoring</li>
+          <li>Reserved vs walk-in control</li>
+          <li>Zonal parking layout</li>
+          <li>Clear color-coded bays</li>
+          <li>Time-based billing</li>
+          <li>Live revenue stats</li>
+          <li>Enterprise-ready UI</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="nav-item">Pricing
+      <div class="nav-dropdown">
+        <div class="price-box"><b>BASIC – ₹999</b><br>50 spots</div>
+        <div class="price-box"><b>PRO – ₹2,999</b><br>150 spots</div>
+        <div class="price-box"><b>ENTERPRISE – ₹4,999</b><br>300+ spots</div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- AUTH -->
+<section id="auth">
+<div class="auth">
+<h2>Enter Platform</h2>
+<p>Unified parking system for owners & drivers</p>
+<input id="email" placeholder="Email">
+<select id="role">
+<option value="admin">Parking Owner / Admin</option>
+<option value="driver">Ola / Uber Driver</option>
+</select>
+<select id="plan">
+<option value="50">BASIC – 50 slots</option>
+<option value="150">PRO – 150 slots</option>
+<option value="300">ENTERPRISE – 300+ slots</option>
+</select>
+<button id="enterBtn">ENTER</button>
+</div>
+</section>
+
+<!-- APP -->
+<section id="app">
+<div class="dashboard">
+<div class="sidebar">
+<div class="stat"><small>Total Slots</small><h2 id="cap">0</h2></div>
+<div class="stat"><small>Booked</small><h2 id="booked">0</h2></div>
+<div class="stat"><small>Revenue</small><h2 id="rev">₹0</h2></div>
+<button onclick="location.reload()">Logout</button>
+</div>
+
+<div class="main">
+<h2>Live Parking Grid</h2>
+<div class="grid" id="grid"></div>
+</div>
+</div>
+</section>
+
+<!-- BOOK -->
+<div class="overlay" id="bookModal">
+<div class="card">
+<h3>Book Spot</h3>
+<input id="hours" type="number" value="2">
+<button id="goPay">Proceed to Pay</button>
+</div>
+</div>
+
+<!-- PAY -->
+<div class="overlay" id="payModal">
+<div class="card">
+<img src="https://upload.wikimedia.org/wikipedia/commons/8/89/Razorpay_logo.svg" width="120">
+<h3>Pay ₹<span id="amt">0</span></h3>
+<button id="payNow">PAY</button>
+</div>
+</div>
+
+<script>
+const state={user:null,spots:[],selected:null,revenue:0};
+
+enterBtn.onclick=()=>{
+state.user={capacity:+plan.value};
+initSpots();
+auth.style.display="none";
+app.style.display="block";
+render();
+};
+
+function initSpots(){
+state.spots=Array.from({length:state.user.capacity},(_,i)=>({id:i+1,status:"free"}));
+}
+
+function render(){
+cap.innerText=state.spots.length;
+booked.innerText=state.spots.filter(s=>s.status==="booked").length;
+rev.innerText="₹"+state.revenue;
+grid.innerHTML="";
+state.spots.forEach((s,i)=>{
+const d=document.createElement("div");
+d.className="spot "+s.status;
+d.innerText=s.id;
+d.onclick=()=>selectSpot(i);
+grid.appendChild(d);
+});
+}
+
+function selectSpot(i){
+if(state.spots[i].status!=="free")return;
+state.spots[i].status="locked";
+state.selected=i;
+bookModal.style.display="flex";
+render();
+}
+
+goPay.onclick=()=>{
+amt.innerText=hours.value*50;
+bookModal.style.display="none";
+payModal.style.display="flex";
+};
+
+payNow.onclick=()=>{
+state.spots[state.selected].status="booked";
+state.revenue+=hours.value*50;
+payModal.style.display="none";
+render();
+};
+</script>
+
+</body>
+</html>

@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,6 +13,7 @@
 --gold:#f4c463;
 --blue:#3b82f6;
 --red:#ef4444;
+--green:#22c55e;
 --muted:#94a3b8;
 }
 
@@ -185,11 +187,21 @@ align-items:center;
 justify-content:center;
 font-size:.7rem;
 cursor:pointer;
+border: 2px solid transparent;
 }
 
 .free{background:#020617;border:1px solid #1e293b}
 .locked{background:var(--blue)}
 .booked{background:var(--red)}
+.parked{background:var(--green)}
+
+@keyframes flash {
+  50% { border-color: var(--blue); }
+}
+
+.expiring {
+  animation: flash 1s infinite;
+}
 
 /* ================= MODALS ================= */
 .overlay{
@@ -202,6 +214,7 @@ justify-content:center;
 }
 
 .card{
+position: relative;
 background:white;
 color:black;
 padding:30px;
@@ -209,6 +222,50 @@ border-radius:20px;
 width:320px;
 text-align:center;
 }
+
+.back-button {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #eee;
+    color: black;
+    font-size: 1.2rem;
+    line-height: 1;
+    padding: 0;
+    border: none;
+    cursor: pointer;
+}
+
+.hour-selector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.hour-selector button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #eee;
+  color: black;
+  font-size: 1.5rem;
+  line-height: 1;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+}
+
+.hour-selector span {
+  font-size: 2rem;
+  font-weight: bold;
+  padding: 0 20px;
+  min-width: 80px;
+}
+
 </style>
 </head>
 
@@ -280,6 +337,7 @@ text-align:center;
 <div class="sidebar">
 <div class="stat"><small>Total Slots</small><h2 id="cap">0</h2></div>
 <div class="stat"><small>Booked</small><h2 id="booked">0</h2></div>
+<div class="stat"><small>Parked</small><h2 id="parked">0</h2></div>
 <div class="stat"><small>Revenue</small><h2 id="rev">₹0</h2></div>
 <button onclick="location.reload()">Logout</button>
 </div>
@@ -294,11 +352,20 @@ text-align:center;
 <!-- BOOK -->
 <div class="overlay" id="bookModal">
 <div class="card">
+<button id="backButton" class="back-button">←</button>
 <h3>Book Spot</h3>
-<input id="hours" type="number" value="2">
+<p style="font-size: 0.8rem; color: #555;">Approx. hours you will park</p>
+<div class="hour-selector">
+    <button id="hourMinus">-</button>
+    <span id="hoursDisplay">2</span>
+    <button id="hourPlus">+</button>
+</div>
+<input id="hours" type="hidden" value="2">
 <button id="goPay">Proceed to Pay</button>
+<button id="onsitePark" style="margin-top: 10px; background: var(--green);">Park Onsite</button>
 </div>
 </div>
+
 
 <!-- PAY -->
 <div class="overlay" id="payModal">
@@ -309,15 +376,58 @@ text-align:center;
 </div>
 </div>
 
+<!-- PARKED INFO -->
+<div class="overlay" id="parkedInfoModal">
+  <div class="card">
+    <h3>Parking Info</h3>
+    <p id="parkedTime"></p>
+    <button id="parkOutButton" style="background: var(--red);">Park Out</button>
+    <button id="closeParkedInfo" style="margin-top: 10px;">Close</button>
+  </div>
+</div>
+
 <script>
 const state={user:null,spots:[],selected:null,revenue:0};
 
-enterBtn.onclick=()=>{
+const hoursDisplay = document.getElementById('hoursDisplay');
+const hoursInput = document.getElementById('hours');
+const hourPlus = document.getElementById('hourPlus');
+const hourMinus = document.getElementById('hourMinus');
+const closeParkedInfo = document.getElementById('closeParkedInfo');
+const backButton = document.getElementById('backButton');
+const parkOutButton = document.getElementById('parkOutButton');
+
+enterBtn.onclick=()=> {
 state.user={capacity:+plan.value};
 initSpots();
 auth.style.display="none";
 app.style.display="block";
 render();
+};
+
+hourPlus.onclick = () => {
+    let currentHours = parseInt(hoursInput.value);
+    currentHours++;
+    hoursInput.value = currentHours;
+    hoursDisplay.innerText = currentHours;
+};
+
+hourMinus.onclick = () => {
+    let currentHours = parseInt(hoursInput.value);
+    if (currentHours > 1) {
+        currentHours--;
+        hoursInput.value = currentHours;
+        hoursDisplay.innerText = currentHours;
+    }
+};
+
+backButton.onclick = () => {
+    if (state.selected !== null) {
+        state.spots[state.selected].status = "free";
+        state.selected = null;
+    }
+    bookModal.style.display = "none";
+    render();
 };
 
 function initSpots(){
@@ -327,37 +437,114 @@ state.spots=Array.from({length:state.user.capacity},(_,i)=>({id:i+1,status:"free
 function render(){
 cap.innerText=state.spots.length;
 booked.innerText=state.spots.filter(s=>s.status==="booked").length;
+parked.innerText=state.spots.filter(s=>s.status==="parked").length;
 rev.innerText="₹"+state.revenue;
 grid.innerHTML="";
 state.spots.forEach((s,i)=>{
-const d=document.createElement("div");
-d.className="spot "+s.status;
-d.innerText=s.id;
-d.onclick=()=>selectSpot(i);
-grid.appendChild(d);
+    const d=document.createElement("div");
+    let classes = "spot " + s.status;
+    if (s.expiring) {
+        classes += " expiring";
+    }
+    d.className = classes;
+    d.innerText=s.id;
+    d.onclick=()=>selectSpot(i);
+    grid.appendChild(d);
 });
 }
 
 function selectSpot(i){
-if(state.spots[i].status!=="free")return;
-state.spots[i].status="locked";
-state.selected=i;
-bookModal.style.display="flex";
-render();
+    const spot = state.spots[i];
+    if (spot.status === 'parked') {
+        state.selected = i;
+        const parkedAt = new Date(spot.parkedAt);
+        const durationInSeconds = (new Date() - parkedAt) / 1000;
+        const hours = Math.floor(durationInSeconds / 8);
+        const minutes = Math.floor(((durationInSeconds % 8) / 8) * 60);
+        parkedTime.innerText = `Parked for ${hours}h and ${minutes}m.`;
+        parkedInfoModal.style.display = "flex";
+        return;
+    }
+    if (spot.status !== "free") return;
+    state.spots[i].status = "locked";
+    state.selected = i;
+    bookModal.style.display = "flex";
+    render();
 }
 
-goPay.onclick=()=>{
+goPay.onclick=()=> {
 amt.innerText=hours.value*50;
 bookModal.style.display="none";
 payModal.style.display="flex";
 };
 
-payNow.onclick=()=>{
-state.spots[state.selected].status="booked";
+payNow.onclick=()=> {
+const spot = state.spots[state.selected];
+spot.status="booked";
+spot.approxHours = parseInt(hours.value);
 state.revenue+=hours.value*50;
 payModal.style.display="none";
 render();
 };
+
+onsitePark.onclick=()=> {
+    const spot = state.spots[state.selected];
+    spot.status = "parked";
+    spot.parkedAt = new Date().toISOString();
+    spot.billedHours = 0;
+    spot.approxHours = parseInt(hours.value);
+    bookModal.style.display = "none";
+    render();
+};
+
+closeParkedInfo.onclick = () => {
+  parkedInfoModal.style.display = "none";
+};
+
+parkOutButton.onclick = () => {
+    const spot = state.spots[state.selected];
+    spot.status = "free";
+    spot.parkedAt = null;
+    spot.billedHours = 0;
+    spot.approxHours = null;
+    spot.expiring = false;
+    parkedInfoModal.style.display = "none";
+    state.selected = null;
+    render();
+};
+
+function updateTimers() {
+    let revenueToAdd = 0;
+    const now = new Date();
+    state.spots.forEach(spot => {
+        if (spot.status === 'parked' && spot.parkedAt) {
+            const parkedDate = new Date(spot.parkedAt);
+            const durationInSeconds = (now - parkedDate) / 1000;
+            const hoursParked = Math.floor(durationInSeconds / 8);
+
+            if (hoursParked > spot.billedHours) {
+                const hoursToBill = hoursParked - spot.billedHours;
+                revenueToAdd += hoursToBill * 50;
+                spot.billedHours = hoursParked;
+            }
+
+            if (spot.approxHours && hoursParked >= spot.approxHours - 1) {
+                 spot.expiring = true;
+            } else {
+                 spot.expiring = false;
+            }
+
+        }
+    });
+
+    if (revenueToAdd > 0) {
+        state.revenue += revenueToAdd;
+    }
+    render();
+}
+
+setInterval(updateTimers, 1000);
+
 </script>
 
 </body>

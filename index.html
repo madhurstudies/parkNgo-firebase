@@ -103,6 +103,7 @@ margin-bottom:8px;
 #auth{
 min-height:calc(100vh - 80px);
 display:flex;
+flex-direction: column;
 align-items:center;
 justify-content:center;
 }
@@ -194,9 +195,10 @@ border: 2px solid transparent;
 .locked{background:var(--blue)}
 .booked{background:var(--red)}
 .parked{background:var(--green)}
+.cab{background:var(--blue)}
 
 @keyframes flash {
-  50% { border-color: var(--blue); }
+  50% { border-color: var(--gold); }
 }
 
 .expiring {
@@ -318,10 +320,6 @@ text-align:center;
 <h2>Enter Platform</h2>
 <p>Unified parking system for owners & drivers</p>
 <input id="email" placeholder="Email">
-<select id="role">
-<option value="admin">Parking Owner / Admin</option>
-<option value="driver">Ola / Uber Driver</option>
-</select>
 <select id="plan">
 <option value="50">BASIC – 50 slots</option>
 <option value="150">PRO – 150 slots</option>
@@ -329,6 +327,7 @@ text-align:center;
 </select>
 <button id="enterBtn">ENTER</button>
 </div>
+<button id="driverLoginBtn" style="margin-top: 20px; width: 420px; background: var(--green);">Login as Ola/Uber Driver</button>
 </section>
 
 <!-- APP -->
@@ -338,6 +337,7 @@ text-align:center;
 <div class="stat"><small>Total Slots</small><h2 id="cap">0</h2></div>
 <div class="stat"><small>Booked</small><h2 id="booked">0</h2></div>
 <div class="stat"><small>Parked</small><h2 id="parked">0</h2></div>
+<div class="stat"><small>Cabs</small><h2 id="cabs">0</h2></div>
 <div class="stat"><small>Revenue</small><h2 id="rev">₹0</h2></div>
 <button onclick="location.reload()">Logout</button>
 </div>
@@ -363,6 +363,7 @@ text-align:center;
 <input id="hours" type="hidden" value="2">
 <button id="goPay">Proceed to Pay</button>
 <button id="onsitePark" style="margin-top: 10px; background: var(--green);">Park Onsite</button>
+<button id="cabPark" style="margin-top: 10px; background: var(--blue);">Cab</button>
 </div>
 </div>
 
@@ -396,14 +397,22 @@ const hourMinus = document.getElementById('hourMinus');
 const closeParkedInfo = document.getElementById('closeParkedInfo');
 const backButton = document.getElementById('backButton');
 const parkOutButton = document.getElementById('parkOutButton');
+const driverLoginBtn = document.getElementById('driverLoginBtn');
+const cabPark = document.getElementById('cabPark');
+const cabs = document.getElementById('cabs');
+
 
 enterBtn.onclick=()=> {
-state.user={capacity:+plan.value};
-initSpots();
-auth.style.display="none";
-app.style.display="block";
-render();
+  state.user={capacity:+plan.value};
+  initSpots();
+  auth.style.display="none";
+  app.style.display="block";
+  render();
 };
+
+driverLoginBtn.onclick = () => {
+    window.location.href = 'driver_login.html';
+}
 
 hourPlus.onclick = () => {
     let currentHours = parseInt(hoursInput.value);
@@ -438,6 +447,7 @@ function render(){
 cap.innerText=state.spots.length;
 booked.innerText=state.spots.filter(s=>s.status==="booked").length;
 parked.innerText=state.spots.filter(s=>s.status==="parked").length;
+cabs.innerText = state.spots.filter(s => s.status === "cab").length;
 rev.innerText="₹"+state.revenue;
 grid.innerHTML="";
 state.spots.forEach((s,i)=>{
@@ -455,7 +465,7 @@ state.spots.forEach((s,i)=>{
 
 function selectSpot(i){
     const spot = state.spots[i];
-    if (spot.status === 'parked') {
+    if (spot.status === 'parked' || spot.status === 'cab') {
         state.selected = i;
         const parkedAt = new Date(spot.parkedAt);
         const durationInSeconds = (new Date() - parkedAt) / 1000;
@@ -480,7 +490,7 @@ payModal.style.display="flex";
 
 payNow.onclick=()=> {
 const spot = state.spots[state.selected];
-spot.status="booked";
+spot.status= "booked";
 spot.approxHours = parseInt(hours.value);
 state.revenue+=hours.value*50;
 payModal.style.display="none";
@@ -496,6 +506,16 @@ onsitePark.onclick=()=> {
     bookModal.style.display = "none";
     render();
 };
+
+cabPark.onclick = () => {
+    const spot = state.spots[state.selected];
+    spot.status = "cab";
+    spot.parkedAt = new Date().toISOString();
+    spot.billedHours = 0;
+    spot.approxHours = parseInt(hours.value);
+    bookModal.style.display = "none";
+    render();
+}
 
 closeParkedInfo.onclick = () => {
   parkedInfoModal.style.display = "none";
@@ -517,18 +537,18 @@ function updateTimers() {
     let revenueToAdd = 0;
     const now = new Date();
     state.spots.forEach(spot => {
-        if (spot.status === 'parked' && spot.parkedAt) {
+        if ((spot.status === 'parked' || spot.status === 'cab') && spot.parkedAt) {
             const parkedDate = new Date(spot.parkedAt);
             const durationInSeconds = (now - parkedDate) / 1000;
             const hoursParked = Math.floor(durationInSeconds / 8);
 
             if (hoursParked > spot.billedHours) {
                 const hoursToBill = hoursParked - spot.billedHours;
-                revenueToAdd += hoursToBill * 50;
+                revenueToAdd += hoursToBill * (spot.status === 'cab' ? 20 : 50);
                 spot.billedHours = hoursParked;
             }
 
-            if (spot.approxHours && hoursParked >= spot.approxHours - 1) {
+            if (spot.approxHours && hoursParked >= spot.approxHours) {
                  spot.expiring = true;
             } else {
                  spot.expiring = false;

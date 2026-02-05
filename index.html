@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Park N Go – Smart Parking Platform</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root{
+--bg:#ffffff;
+--panel:#f8f9fa;
+--gold:#f4c463;
+--blue:#3b82f6;
+--red:#ef4444;
+--green:#22c55e;
+--purple:#a855f7;
+--orange:#f97316;
+--muted:#64748b;
+--text:#1e293b;
+--border:#e2e8f0;
+}
+
+*{box-sizing:border-box;font-family:Inter,system-ui}
+body{
+margin:0;
+background:#ffffff;
+color:#1e293b;
+min-height:100vh;
+}
+
+/* ================= NAV ================= */
+.top-nav{
+position:sticky;
+top:0;
+z-index:200;
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:18px 50px;
+background:#ffffff;
+backdrop-filter:blur(12px);
+border-bottom:2px solid #e2e8f0;
+box-shadow: 0 2px 10px rgba(0,0,0,.05);
+}
+
+.brand{
+font-weight:900;
+font-size:1.3rem;
+background: linear-gradient(135deg, var(--gold), #eab308);
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+letter-spacing:1px;
+}
+
+.nav-right{
+display:flex;
+gap:26px;
+font-size:.85rem;
+color:#475569;
+}
+
+.nav-item{
+position:relative;
+cursor:pointer;
+transition: all .3s;
+padding: 8px 12px;
+border-radius: 8px;
+}
+
+.nav-item:hover{
+color:#1e293b;
+background: rgba(244,196,99,.15);
+}
+
+.nav-dropdown{
+display:none;
+position:absolute;
+top:46px;
+right:0;
+width:360px;
+background:#ffffff;
+padding:20px;
+border-radius:16px;
+box-shadow:0 10px 40px rgba(0,0,0,.15);
+border: 1px solid #e2e8f0;
+}
+
+.nav-item:hover .nav-dropdown{display:block}
+
+.nav-dropdown h4{
+color:#1e293b;
+margin-bottom:12px;
+font-size:.95rem;
+}
+
+.nav-dropdown p,
+.nav-dropdown li{
+font-size:.78rem;
+color:var(--muted);
+margin-bottom:8px;
+line-height:1.5;
+}
+
+.nav-dropdown ul {
+list-style: none;
+padding: 0;
+}
+
+.nav-dropdown li::before {
+content: "✓ ";
+color: var(--green);
+font-weight: bold;
+margin-right: 8px;
+}
+
+.price-box{
+background:#f8f9fa;
+border:1px solid #e2e8f0;
+border-radius:12px;
+padding:12px;
+margin-bottom:10px;
+transition: all .3s;
+}
+
+.price-box:hover {
+background:#f1f5f9;
+border-color: var(--gold);
+transform: translateX(4px);
+}
+
+/* ================= AUTH ================= */
+#auth{
+min-height:calc(100vh - 80px);
+display:flex;
+flex-direction: column;
+align-items:center;
+justify-content:center;
+padding: 20px;
+background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.auth{
+background:#ffffff;
+padding:50px;
+width:450px;
+border-radius:26px;
+box-shadow:0 10px 40px rgba(0,0,0,.1);
+border: 1px solid #e2e8f0;
+}
+
+.auth h2{
+text-align:center;
+background: linear-gradient(135deg, var(--gold), #eab308);
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+margin-bottom:8px;
+font-size: 1.8rem;
+}
+
+.auth p{
+text-align:center;
+font-size:.85rem;
+color:var(--muted);
+margin-bottom:28px;
+}
+
+.auth input,
+.auth select{
+width:100%;
+padding:16px;
+margin-bottom:16px;
+background:#f8f9fa;
+border:1px solid #e2e8f0;
+border-radius:12px;
+color:#1e293b;
+font-size: .9rem;
+transition: all .3s;
+}
+
+.auth input:focus,
+.auth select:focus {
+outline: none;
+border-color: var(--gold);
+background: #ffffff;
+box-shadow: 0 0 0 3px rgba(244,196,99,.1);
+}
+
+button{
+width:100%;
+padding:16px;
+border:none;
+border-radius:14px;
+font-weight:900;
+cursor:pointer;
+background:linear-gradient(135deg,#f4c463,#eab308);
+font-size: .9rem;
+transition: all .3s;
+}
+
+button:hover {
+transform: translateY(-2px);
+box-shadow: 0 8px 20px rgba(244,196,99,.3);
+}
+
+button:active {
+transform: translateY(0);
+}
+
+/* ================= APP ================= */
+#app{display:none}
+
+.dashboard{
+display:grid;
+grid-template-columns:280px 1fr;
+min-height:100vh;
+background:#f8f9fa;
+}
+
+.sidebar{
+background:#ffffff;
+padding:30px;
+border-right:2px solid #e2e8f0;
+}
+
+.stat{
+margin-bottom:24px;
+padding: 16px;
+background: #f8f9fa;
+border-radius: 12px;
+border: 1px solid #e2e8f0;
+transition: all .3s;
+}
+
+.stat:hover {
+background: #f1f5f9;
+transform: translateX(4px);
+box-shadow: 0 2px 8px rgba(0,0,0,.05);
+}
+
+.stat small{
+color:var(--muted);
+font-size: .75rem;
+text-transform: uppercase;
+letter-spacing: .5px;
+}
+
+.stat h2{
+color:#1e293b;
+margin-top: 8px;
+font-size: 1.8rem;
+font-weight: 900;
+}
+
+.legend {
+margin-top: 30px;
+padding: 16px;
+background: #f8f9fa;
+border-radius: 12px;
+border: 1px solid #e2e8f0;
+}
+
+.legend h4 {
+font-size: .8rem;
+color: var(--muted);
+margin-bottom: 12px;
+text-transform: uppercase;
+letter-spacing: .5px;
+}
+
+.legend-item {
+display: flex;
+align-items: center;
+margin-bottom: 8px;
+font-size: .8rem;
+color: #475569;
+}
+
+.legend-color {
+width: 20px;
+height: 20px;
+border-radius: 4px;
+margin-right: 10px;
+}
+
+.main{padding:40px; background:#f8f9fa;}
+
+.main h2 {
+margin-bottom: 24px;
+font-size: 1.6rem;
+color:#1e293b;
+}
+
+.grid-controls {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 20px;
+padding: 16px;
+background: #ffffff;
+border-radius: 12px;
+border: 1px solid #e2e8f0;
+box-shadow: 0 1px 3px rgba(0,0,0,.05);
+}
+
+.search-box {
+padding: 10px 16px;
+background: #f8f9fa;
+border: 1px solid #e2e8f0;
+border-radius: 8px;
+color: #1e293b;
+width: 200px;
+}
+
+.search-box:focus {
+outline: none;
+border-color: var(--gold);
+background: #ffffff;
+}
+
+.filter-btn {
+padding: 10px 20px;
+width: auto;
+font-size: .8rem;
+margin-left: 10px;
+}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(10,1fr);
+gap:10px;
+background:#ffffff;
+padding:24px;
+border-radius:20px;
+border: 1px solid #e2e8f0;
+box-shadow: 0 1px 3px rgba(0,0,0,.05);
+}
+
+.spot{
+height:52px;
+border-radius:8px;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:.75rem;
+font-weight: 700;
+cursor:pointer;
+border: 2px solid transparent;
+transition: all .3s;
+position: relative;
+color: white;
+}
+
+.spot:hover:not(.reserved) {
+transform: scale(1.05);
+box-shadow: 0 4px 12px rgba(0,0,0,.2);
+}
+
+.free{
+background:#f1f5f9;
+border:2px solid #cbd5e1;
+color:#64748b;
+}
+
+.reserved{
+background:var(--purple);
+cursor: not-allowed;
+}
+
+.booked{
+background:var(--orange);
+}
+
+.parked{
+background:var(--green);
+}
+
+.cab{
+background:var(--blue);
+}
+
+@keyframes flash {
+  0%, 100% { border-color: transparent; box-shadow: none; }
+  50% { border-color: var(--gold); box-shadow: 0 0 20px rgba(244,196,99,.5); }
+}
+
+.expiring {
+  animation: flash 1s infinite;
+}
+
+.spot-timer {
+  position: absolute;
+  bottom: 2px;
+  font-size: .55rem;
+  opacity: .8;
+}
+
+/* ================= MODALS ================= */
+.overlay{
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.6);
+backdrop-filter: blur(8px);
+display:none;
+align-items:center;
+justify-content:center;
+z-index: 300;
+}
+
+.card{
+position: relative;
+background:linear-gradient(135deg, #ffffff, #f8f9fa);
+color:black;
+padding:40px;
+border-radius:24px;
+width:380px;
+text-align:center;
+box-shadow: 0 40px 100px rgba(0,0,0,.5);
+}
+
+.card h3 {
+font-size: 1.5rem;
+margin-bottom: 8px;
+}
+
+.back-button {
+position: absolute;
+top: 20px;
+left: 20px;
+width: 36px;
+height: 36px;
+border-radius: 50%;
+background: #eee;
+color: black;
+font-size: 1.4rem;
+line-height: 1;
+padding: 0;
+border: none;
+cursor: pointer;
+transition: all .3s;
+}
+
+.back-button:hover {
+background: #ddd;
+transform: scale(1.1);
+}
+
+.hour-selector {
+display: flex;
+align-items: center;
+justify-content: center;
+margin: 28px 0;
+}
+
+.hour-selector button {
+width: 44px;
+height: 44px;
+border-radius: 50%;
+background: #eee;
+color: black;
+font-size: 1.6rem;
+line-height: 1;
+padding: 0;
+border: none;
+cursor: pointer;
+transition: all .3s;
+}
+
+.hour-selector button:hover {
+background: #ddd;
+transform: scale(1.1);
+}
+
+.hour-selector span {
+font-size: 2.5rem;
+font-weight: bold;
+padding: 0 30px;
+min-width: 100px;
+}
+
+.card button {
+margin-top: 12px;
+}
+
+.card button:first-of-type {
+margin-top: 0;
+}
+
+.info-row {
+display: flex;
+justify-content: space-between;
+padding: 12px;
+background: #f8f9fa;
+border-radius: 8px;
+margin: 8px 0;
+font-size: .9rem;
+}
+
+.info-label {
+color: #666;
+}
+
+.info-value {
+font-weight: bold;
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 768px) {
+  .dashboard {
+    grid-template-columns: 1fr;
+  }
+  
+  .sidebar {
+    border-right: none;
+    border-bottom: 1px solid rgba(255,255,255,.1);
+  }
+  
+  .grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+  
+  .top-nav {
+    padding: 18px 20px;
+  }
+  
+  .nav-right {
+    gap: 15px;
+  }
+  
+  .auth {
+    width: 90%;
+    padding: 30px;
+  }
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- NAV -->
+<nav class="top-nav">
+  <div class="brand">🚗 PARK N GO</div>
+
+  <div class="nav-right">
+    <div class="nav-item">About
+      <div class="nav-dropdown">
+        <h4>About Park N Go</h4>
+        <p>Smart parking platform reducing congestion, uncertainty and revenue loss.</p>
+        <p>Built for owners and Ola/Uber drivers.</p>
+      </div>
+    </div>
+
+    <div class="nav-item">Features
+      <div class="nav-dropdown">
+        <h4>Platform Features</h4>
+        <ul>
+          <li>Real-time slot availability tracking</li>
+          <li>Reserved parking management</li>
+          <li>Instant booking system</li>
+          <li>Time-based automated billing</li>
+          <li>Overstay alerts with visual indicators</li>
+          <li>Color-coded parking grid</li>
+          <li>Separate rates for cabs vs regular</li>
+          <li>Live revenue dashboard</li>
+          <li>Spot search & filtering</li>
+          <li>Historical parking data</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="nav-item">Pricing
+      <div class="nav-dropdown">
+        <div class="price-box"><b>BASIC – ₹999/month</b><br>50 parking spots</div>
+        <div class="price-box"><b>PRO – ₹2,999/month</b><br>150 parking spots</div>
+        <div class="price-box"><b>ENTERPRISE – ₹4,999/month</b><br>300+ parking spots</div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- AUTH -->
+<section id="auth">
+<div class="auth">
+<h2>Enter Platform</h2>
+<p>Unified parking system for owners & drivers</p>
+<input id="email" placeholder="Email Address">
+<select id="plan">
+<option value="50">BASIC – 50 slots</option>
+<option value="150">PRO – 150 slots</option>
+<option value="300">ENTERPRISE – 300+ slots</option>
+</select>
+<button id="enterBtn">ENTER PLATFORM</button>
+</div>
+<button id="driverLoginBtn" style="margin-top: 20px; width: 450px; background: linear-gradient(135deg, var(--green), #16a34a);">Login as Ola/Uber Driver</button>
+</section>
+
+<!-- APP -->
+<section id="app">
+<div class="dashboard">
+<div class="sidebar">
+<div class="stat"><small>Total Slots</small><h2 id="cap">0</h2></div>
+<div class="stat"><small>Reserved</small><h2 id="reserved">0</h2></div>
+<div class="stat"><small>Booked</small><h2 id="booked">0</h2></div>
+<div class="stat"><small>Parked</small><h2 id="parked">0</h2></div>
+<div class="stat"><small>Cabs</small><h2 id="cabs">0</h2></div>
+<div class="stat"><small>Revenue</small><h2 id="rev">₹0</h2></div>
+<button onclick="location.reload()" style="margin-top: 20px;">Logout</button>
+
+<div class="legend">
+  <h4>Legend</h4>
+  <div class="legend-item">
+    <div class="legend-color" style="background: #f1f5f9; border: 2px solid #cbd5e1;"></div>
+    <span>Available</span>
+  </div>
+  <div class="legend-item">
+    <div class="legend-color" style="background: var(--purple);"></div>
+    <span>Reserved</span>
+  </div>
+  <div class="legend-item">
+    <div class="legend-color" style="background: var(--orange);"></div>
+    <span>Booked</span>
+  </div>
+  <div class="legend-item">
+    <div class="legend-color" style="background: var(--green);"></div>
+    <span>Parked</span>
+  </div>
+  <div class="legend-item">
+    <div class="legend-color" style="background: var(--blue);"></div>
+    <span>Cab</span>
+  </div>
+</div>
+</div>
+
+<div class="main">
+<h2>Live Parking Grid</h2>
+
+<div class="grid-controls">
+  <input type="text" id="searchSpot" class="search-box" placeholder="Search spot number...">
+  <div>
+    <button class="filter-btn" id="filterAll">All</button>
+    <button class="filter-btn" id="filterAvailable">Available</button>
+    <button class="filter-btn" id="filterOccupied">Occupied</button>
+  </div>
+</div>
+
+<div class="grid" id="grid"></div>
+</div>
+</div>
+</section>
+
+<!-- BOOK -->
+<div class="overlay" id="bookModal">
+<div class="card">
+<button id="backButton" class="back-button">←</button>
+<h3>Book Spot <span id="selectedSpotNumber"></span></h3>
+<p style="font-size: 0.85rem; color: #555; margin-top: 4px;">Select parking duration</p>
+<div class="hour-selector">
+    <button id="hourMinus">−</button>
+    <span id="hoursDisplay">2</span>
+    <button id="hourPlus">+</button>
+</div>
+<input id="hours" type="hidden" value="2">
+<div class="info-row">
+  <span class="info-label">Regular Rate:</span>
+  <span class="info-value">₹50/hour</span>
+</div>
+<div class="info-row">
+  <span class="info-label">Cab Rate:</span>
+  <span class="info-value">₹20/hour</span>
+</div>
+<button id="goPay" style="background: linear-gradient(135deg,#f4c463,#eab308);">Proceed to Pay (₹<span id="prePayAmount">100</span>)</button>
+<button id="onsitePark" style="background: linear-gradient(135deg, var(--green), #16a34a);">Park On-site</button>
+<button id="cabPark" style="background: linear-gradient(135deg, var(--blue), #2563eb);">Cab Parking</button>
+<button id="reserveSpot" style="background: linear-gradient(135deg, var(--purple), #9333ea);">Reserve Spot</button>
+</div>
+</div>
+
+
+<!-- PAY -->
+<div class="overlay" id="payModal">
+<div class="card" style="width: 480px; padding: 0; overflow: hidden;">
+  <div style="background: #528FF0; padding: 20px; color: white; text-align: left;">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/8/89/Razorpay_logo.svg" width="100" style="filter: brightness(0) invert(1);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px;">
+      <div>
+        <div style="font-size: 0.85rem; opacity: 0.9;">Park N Go</div>
+        <div style="font-size: 2rem; font-weight: bold; margin-top: 4px;">₹<span id="amt">0</span></div>
+      </div>
+      <div style="background: rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 20px; font-size: 0.85rem;">
+        🔒 Secure
+      </div>
+    </div>
+  </div>
+  
+  <div style="padding: 30px;">
+    <div class="payment-tabs" style="display: flex; gap: 10px; margin-bottom: 24px; border-bottom: 2px solid #eee;">
+      <div class="payment-tab active" data-tab="card" style="flex: 1; text-align: center; padding: 12px; cursor: pointer; border-bottom: 3px solid #528FF0; font-weight: 600; color: #528FF0;">
+        💳 Card
+      </div>
+      <div class="payment-tab" data-tab="upi" style="flex: 1; text-align: center; padding: 12px; cursor: pointer; border-bottom: 3px solid transparent; color: #666;">
+        📱 UPI
+      </div>
+      <div class="payment-tab" data-tab="netbanking" style="flex: 1; text-align: center; padding: 12px; cursor: pointer; border-bottom: 3px solid transparent; color: #666;">
+        🏦 Netbanking
+      </div>
+    </div>
+
+    <!-- Card Payment -->
+    <div id="cardPayment" class="payment-method" style="display: block;">
+      <div style="margin-bottom: 16px;">
+        <label style="display: block; font-size: 0.85rem; color: #666; margin-bottom: 6px;">Card Number</label>
+        <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.95rem; color: #1e293b;">
+      </div>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+        <div>
+          <label style="display: block; font-size: 0.85rem; color: #666; margin-bottom: 6px;">Valid Through</label>
+          <input type="text" id="cardExpiry" placeholder="MM/YY" maxlength="5" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.95rem; color: #1e293b;">
+        </div>
+        <div>
+          <label style="display: block; font-size: 0.85rem; color: #666; margin-bottom: 6px;">CVV</label>
+          <input type="password" id="cardCVV" placeholder="123" maxlength="3" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.95rem; color: #1e293b;">
+        </div>
+      </div>
+      
+      <div style="margin-bottom: 16px;">
+        <label style="display: block; font-size: 0.85rem; color: #666; margin-bottom: 6px;">Cardholder Name</label>
+        <input type="text" id="cardName" placeholder="Name on Card" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.95rem; color: #1e293b;">
+      </div>
+      
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 20px; font-size: 0.8rem; color: #666;">
+        <input type="checkbox" id="saveCard" style="width: 16px; height: 16px;">
+        <label for="saveCard">Securely save card for future payments</label>
+      </div>
+    </div>
+
+    <!-- UPI Payment -->
+    <div id="upiPayment" class="payment-method" style="display: none;">
+      <div style="margin-bottom: 16px;">
+        <label style="display: block; font-size: 0.85rem; color: #666; margin-bottom: 6px;">Enter UPI ID</label>
+        <input type="text" id="upiId" placeholder="yourname@paytm" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.95rem; color: #1e293b;">
+      </div>
+      
+      <div style="text-align: center; margin: 24px 0; color: #666; font-size: 0.85rem;">OR</div>
+      
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+        <div class="upi-option" style="border: 1px solid #ddd; border-radius: 12px; padding: 16px; text-align: center; cursor: pointer; transition: all 0.3s;">
+          <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Crect fill='%235f259f' width='40' height='40' rx='8'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='white' font-size='20' font-weight='bold'%3EGP%3C/text%3E%3C/svg%3E" width="40" style="margin-bottom: 8px;">
+          <div style="font-size: 0.75rem; font-weight: 600;">Google Pay</div>
+        </div>
+        <div class="upi-option" style="border: 1px solid #ddd; border-radius: 12px; padding: 16px; text-align: center; cursor: pointer; transition: all 0.3s;">
+          <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Crect fill='%2300BAF2' width='40' height='40' rx='8'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='white' font-size='20' font-weight='bold'%3EPm%3C/text%3E%3C/svg%3E" width="40" style="margin-bottom: 8px;">
+          <div style="font-size: 0.75rem; font-weight: 600;">Paytm</div>
+        </div>
+        <div class="upi-option" style="border: 1px solid #ddd; border-radius: 12px; padding: 16px; text-align: center; cursor: pointer; transition: all 0.3s;">
+          <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Crect fill='%235F259F' width='40' height='40' rx='8'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='white' font-size='20' font-weight='bold'%3EPe%3C/text%3E%3C/svg%3E" width="40" style="margin-bottom: 8px;">
+          <div style="font-size: 0.75rem; font-weight: 600;">PhonePe</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Netbanking Payment -->
+    <div id="netbankingPayment" class="payment-method" style="display: none;">
+      <div style="margin-bottom: 16px;">
+        <label style="display: block; font-size: 0.85rem; color: #666; margin-bottom: 6px;">Select Your Bank</label>
+        <select id="bankSelect" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.95rem; color: #1e293b;">
+          <option value="">Choose Bank</option>
+          <option value="sbi">State Bank of India</option>
+          <option value="hdfc">HDFC Bank</option>
+          <option value="icici">ICICI Bank</option>
+          <option value="axis">Axis Bank</option>
+          <option value="kotak">Kotak Mahindra Bank</option>
+          <option value="pnb">Punjab National Bank</option>
+          <option value="other">Other Banks</option>
+        </select>
+      </div>
+      
+      <div style="background: #f8f9fa; padding: 16px; border-radius: 8px; font-size: 0.8rem; color: #666; margin-top: 20px;">
+        <strong>Note:</strong> You will be redirected to your bank's secure login page to complete the payment.
+      </div>
+    </div>
+
+    <button id="payNow" style="width: 100%; background: linear-gradient(135deg, #528FF0, #4a7fd9); color: white; padding: 16px; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; margin-top: 24px;">
+      Pay ₹<span id="amt2">0</span>
+    </button>
+    
+    <button onclick="payModal.style.display='none'; bookModal.style.display='flex';" style="width: 100%; background: #f1f1f1; color: #333; padding: 12px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 12px;">
+      Cancel
+    </button>
+    
+    <div style="text-align: center; margin-top: 20px; font-size: 0.75rem; color: #999;">
+      🔒 Payments are 100% secure and encrypted
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- PARKED INFO -->
+<div class="overlay" id="parkedInfoModal">
+  <div class="card">
+    <h3>Parking Details</h3>
+    <div class="info-row">
+      <span class="info-label">Spot:</span>
+      <span class="info-value" id="infoSpotNumber"></span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Duration:</span>
+      <span class="info-value" id="parkedTime"></span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Current Charges:</span>
+      <span class="info-value" id="currentCharges">₹0</span>
+    </div>
+    <button id="parkOutButton" style="background: linear-gradient(135deg, var(--red), #dc2626);">Check Out & Pay</button>
+    <button id="closeParkedInfo" style="background: #ddd; color: #333;">Close</button>
+  </div>
+</div>
+
+<!-- BOOKED INFO -->
+<div class="overlay" id="bookedInfoModal">
+  <div class="card">
+    <h3>Booking Details</h3>
+    <div class="info-row">
+      <span class="info-label">Spot:</span>
+      <span class="info-value" id="bookedSpotNumber"></span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Booked For:</span>
+      <span class="info-value" id="bookedHours"></span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Amount Paid:</span>
+      <span class="info-value" id="bookedAmount">₹0</span>
+    </div>
+    <button id="cancelBooking" style="background: linear-gradient(135deg, var(--red), #dc2626);">Cancel Booking</button>
+    <button id="closeBookedInfo" style="background: #ddd; color: #333;">Close</button>
+  </div>
+</div>
+
+<script>
+const state={user:null,spots:[],selected:null,revenue:0,filter:'all'};
+
+const hoursDisplay = document.getElementById('hoursDisplay');
+const hoursInput = document.getElementById('hours');
+const hourPlus = document.getElementById('hourPlus');
+const hourMinus = document.getElementById('hourMinus');
+const closeParkedInfo = document.getElementById('closeParkedInfo');
+const backButton = document.getElementById('backButton');
+const parkOutButton = document.getElementById('parkOutButton');
+const driverLoginBtn = document.getElementById('driverLoginBtn');
+const cabPark = document.getElementById('cabPark');
+const reserveSpot = document.getElementById('reserveSpot');
+const searchSpot = document.getElementById('searchSpot');
+const filterAll = document.getElementById('filterAll');
+const filterAvailable = document.getElementById('filterAvailable');
+const filterOccupied = document.getElementById('filterOccupied');
+const prePayAmount = document.getElementById('prePayAmount');
+const bookedInfoModal = document.getElementById('bookedInfoModal');
+const closeBookedInfo = document.getElementById('closeBookedInfo');
+const cancelBooking = document.getElementById('cancelBooking');
+const payNow = document.getElementById('payNow');
+
+// Load saved payment details
+window.addEventListener('DOMContentLoaded', () => {
+  const savedCard = localStorage.getItem('savedCardNumber');
+  const savedExpiry = localStorage.getItem('savedCardExpiry');
+  const savedName = localStorage.getItem('savedCardName');
+  const savedUPI = localStorage.getItem('savedUPI');
+  
+  if (savedCard) {
+    document.getElementById('cardNumber').value = savedCard;
+  }
+  if (savedExpiry) {
+    document.getElementById('cardExpiry').value = savedExpiry;
+  }
+  if (savedName) {
+    document.getElementById('cardName').value = savedName;
+  }
+  if (savedUPI) {
+    document.getElementById('upiId').value = savedUPI;
+  }
+});
+
+enterBtn.onclick=()=> {
+  state.user={capacity:+plan.value};
+  initSpots();
+  auth.style.display="none";
+  app.style.display="block";
+  render();
+};
+
+driverLoginBtn.onclick = () => {
+    alert('Driver portal coming soon!');
+}
+
+hourPlus.onclick = () => {
+    let currentHours = parseInt(hoursInput.value);
+    currentHours++;
+    hoursInput.value = currentHours;
+    hoursDisplay.innerText = currentHours;
+    prePayAmount.innerText = currentHours * 50;
+};
+
+hourMinus.onclick = () => {
+    let currentHours = parseInt(hoursInput.value);
+    if (currentHours > 1) {
+        currentHours--;
+        hoursInput.value = currentHours;
+        hoursDisplay.innerText = currentHours;
+        prePayAmount.innerText = currentHours * 50;
+    }
+};
+
+backButton.onclick = () => {
+    if (state.selected !== null) {
+        state.spots[state.selected].status = "free";
+        state.selected = null;
+    }
+    bookModal.style.display = "none";
+    render();
+};
+
+searchSpot.oninput = (e) => {
+  render(e.target.value);
+};
+
+filterAll.onclick = () => {
+  state.filter = 'all';
+  render();
+};
+
+filterAvailable.onclick = () => {
+  state.filter = 'available';
+  render();
+};
+
+filterOccupied.onclick = () => {
+  state.filter = 'occupied';
+  render();
+};
+
+function initSpots(){
+state.spots=Array.from({length:state.user.capacity},(_,i)=>({id:i+1,status:"free"}));
+}
+
+function render(searchTerm = ''){
+cap.innerText=state.spots.length;
+reserved.innerText=state.spots.filter(s=>s.status==="reserved").length;
+booked.innerText=state.spots.filter(s=>s.status==="booked").length;
+parked.innerText=state.spots.filter(s=>s.status==="parked").length;
+cabs.innerText = state.spots.filter(s => s.status === "cab").length;
+rev.innerText="₹"+state.revenue;
+grid.innerHTML="";
+
+let filteredSpots = state.spots.filter((s, i) => {
+  const matchesSearch = searchTerm === '' || s.id.toString().includes(searchTerm);
+  const matchesFilter = 
+    state.filter === 'all' || 
+    (state.filter === 'available' && s.status === 'free') ||
+    (state.filter === 'occupied' && s.status !== 'free');
+  return matchesSearch && matchesFilter;
+});
+
+filteredSpots.forEach((s,i)=>{
+    const realIndex = state.spots.findIndex(spot => spot.id === s.id);
+    const d=document.createElement("div");
+    let classes = "spot " + s.status;
+    if (s.expiring) {
+        classes += " expiring";
+    }
+    d.className = classes;
+    
+    let displayText = s.id;
+    if (s.status === 'parked' || s.status === 'cab') {
+      const parkedAt = new Date(s.parkedAt);
+      const durationInSeconds = (new Date() - parkedAt) / 1000;
+      const hours = Math.floor(durationInSeconds / 8);
+      const minutes = Math.floor(((durationInSeconds % 8) / 8) * 60);
+      displayText += `<br><span class="spot-timer">${hours}:${minutes.toString().padStart(2, '0')}</span>`;
+    }
+    
+    d.innerHTML = displayText;
+    d.onclick=()=>selectSpot(realIndex);
+    grid.appendChild(d);
+});
+}
+
+function selectSpot(i){
+    const spot = state.spots[i];
+    selectedSpotNumber.innerText = '#' + spot.id;
+    
+    if (spot.status === 'reserved') {
+        alert('This spot is reserved and cannot be modified.');
+        return;
+    }
+    
+    if (spot.status === 'booked') {
+        state.selected = i;
+        document.getElementById('bookedSpotNumber').innerText = '#' + spot.id;
+        const hours = spot.approxHours || 2; // Default to 2 hours if not set
+        document.getElementById('bookedHours').innerText = hours + ' hour' + (hours > 1 ? 's' : '');
+        document.getElementById('bookedAmount').innerText = '₹' + (hours * 50);
+        bookedInfoModal.style.display = "flex";
+        return;
+    }
+    
+    if (spot.status === 'parked' || spot.status === 'cab') {
+        state.selected = i;
+        const parkedAt = new Date(spot.parkedAt);
+        const durationInSeconds = (new Date() - parkedAt) / 1000;
+        const hours = Math.floor(durationInSeconds / 8);
+        const minutes = Math.floor(((durationInSeconds % 8) / 8) * 60);
+        parkedTime.innerText = `${hours}h ${minutes}m`;
+        infoSpotNumber.innerText = '#' + spot.id;
+        
+        const rate = spot.status === 'cab' ? 20 : 50;
+        const currentHours = Math.max(1, hours);
+        currentCharges.innerText = `₹${currentHours * rate}`;
+        
+        parkedInfoModal.style.display = "flex";
+        return;
+    }
+    if (spot.status !== "free") return;
+    state.spots[i].status = "reserved";
+    state.selected = i;
+    hoursInput.value = 2;
+    hoursDisplay.innerText = 2;
+    prePayAmount.innerText = 100;
+    bookModal.style.display = "flex";
+    render();
+}
+
+goPay.onclick=()=> {
+const amount = hours.value*50;
+amt.innerText = amount;
+document.getElementById('amt2').innerText = amount;
+bookModal.style.display="none";
+payModal.style.display="flex";
+};
+
+// Payment tabs switching
+document.querySelectorAll('.payment-tab').forEach(tab => {
+  tab.onclick = function() {
+    // Remove active class from all tabs
+    document.querySelectorAll('.payment-tab').forEach(t => {
+      t.classList.remove('active');
+      t.style.borderBottomColor = 'transparent';
+      t.style.color = '#666';
+      t.style.fontWeight = '400';
+    });
+    
+    // Add active class to clicked tab
+    this.classList.add('active');
+    this.style.borderBottomColor = '#528FF0';
+    this.style.color = '#528FF0';
+    this.style.fontWeight = '600';
+    
+    // Hide all payment methods
+    document.querySelectorAll('.payment-method').forEach(method => {
+      method.style.display = 'none';
+    });
+    
+    // Show selected payment method
+    const tabType = this.getAttribute('data-tab');
+    if (tabType === 'card') {
+      document.getElementById('cardPayment').style.display = 'block';
+    } else if (tabType === 'upi') {
+      document.getElementById('upiPayment').style.display = 'block';
+    } else if (tabType === 'netbanking') {
+      document.getElementById('netbankingPayment').style.display = 'block';
+    }
+  };
+});
+
+// Card number formatting
+const cardNumber = document.getElementById('cardNumber');
+if (cardNumber) {
+  cardNumber.oninput = function() {
+    let value = this.value.replace(/\s/g, '');
+    let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+    this.value = formattedValue;
+  };
+}
+
+// Expiry formatting
+const cardExpiry = document.getElementById('cardExpiry');
+if (cardExpiry) {
+  cardExpiry.oninput = function() {
+    let value = this.value.replace(/\D/g, '');
+    if (value.length >= 2) {
+      value = value.slice(0, 2) + '/' + value.slice(2, 4);
+    }
+    this.value = value;
+  };
+}
+
+// CVV validation
+const cardCVV = document.getElementById('cardCVV');
+if (cardCVV) {
+  cardCVV.oninput = function() {
+    this.value = this.value.replace(/\D/g, '').slice(0, 3);
+  };
+}
+
+// UPI options interaction
+document.querySelectorAll('.upi-option').forEach(option => {
+  option.onmouseover = function() {
+    this.style.borderColor = '#528FF0';
+    this.style.transform = 'scale(1.05)';
+  };
+  option.onmouseout = function() {
+    this.style.borderColor = '#ddd';
+    this.style.transform = 'scale(1)';
+  };
+  option.onclick = function() {
+    document.getElementById('payNow').click();
+  };
+});
+
+payNow.onclick=()=> {
+const activeTab = document.querySelector('.payment-tab.active').getAttribute('data-tab');
+let isValid = false;
+let message = '';
+
+if (activeTab === 'card') {
+  const cardNum = document.getElementById('cardNumber').value.replace(/\s/g, '');
+  const expiry = document.getElementById('cardExpiry').value;
+  const cvv = document.getElementById('cardCVV').value;
+  const name = document.getElementById('cardName').value;
+  const saveCard = document.getElementById('saveCard').checked;
+  
+  if (!cardNum || cardNum.length < 16) {
+    message = 'Please enter a valid 16-digit card number';
+  } else if (!expiry || expiry.length < 5) {
+    message = 'Please enter valid expiry date (MM/YY)';
+  } else if (!cvv || cvv.length < 3) {
+    message = 'Please enter valid CVV';
+  } else if (!name || name.trim().length < 3) {
+    message = 'Please enter cardholder name';
+  } else {
+    isValid = true;
+    message = 'Processing card payment...';
+    
+    // Save card details if checkbox is checked
+    if (saveCard) {
+      localStorage.setItem('savedCardNumber', document.getElementById('cardNumber').value);
+      localStorage.setItem('savedCardExpiry', expiry);
+      localStorage.setItem('savedCardName', name);
+    }
+  }
+} else if (activeTab === 'upi') {
+  const upiId = document.getElementById('upiId').value;
+  if (!upiId || !upiId.includes('@')) {
+    message = 'Please enter a valid UPI ID or select a UPI app';
+  } else {
+    isValid = true;
+    message = 'Sending payment request to your UPI app...';
+    
+    // Save UPI ID
+    localStorage.setItem('savedUPI', upiId);
+  }
+} else if (activeTab === 'netbanking') {
+  const bank = document.getElementById('bankSelect').value;
+  if (!bank) {
+    message = 'Please select your bank';
+  } else {
+    isValid = true;
+    message = 'Redirecting to bank portal...';
+  }
+}
+
+if (!isValid) {
+  alert(message);
+  return;
+}
+
+// Show processing message
+const payButton = document.getElementById('payNow');
+const originalText = payButton.innerHTML;
+payButton.innerHTML = '⏳ Processing...';
+payButton.disabled = true;
+payButton.style.opacity = '0.7';
+
+setTimeout(() => {
+  const spot = state.spots[state.selected];
+  spot.status = "booked";
+  spot.approxHours = parseInt(hours.value);
+  state.revenue += parseInt(hours.value) * 50;
+  
+  // Reset payment form (except saved details)
+  if (activeTab === 'card') {
+    document.getElementById('cardCVV').value = '';
+    document.getElementById('saveCard').checked = false;
+  } else if (activeTab === 'netbanking') {
+    document.getElementById('bankSelect').value = '';
+  }
+  
+  payButton.innerHTML = originalText;
+  payButton.disabled = false;
+  payButton.style.opacity = '1';
+  
+  payModal.style.display = "none";
+  state.selected = null;
+  render();
+  
+  alert('✓ Payment successful! Spot booked.');
+}, 2000);
+};
+
+onsitePark.onclick=()=> {
+    const spot = state.spots[state.selected];
+    spot.status = "parked";
+    spot.parkedAt = new Date().toISOString();
+    spot.billedHours = 0;
+    spot.approxHours = parseInt(hours.value);
+    bookModal.style.display = "none";
+    state.selected = null;
+    render();
+};
+
+cabPark.onclick = () => {
+    const spot = state.spots[state.selected];
+    spot.status = "cab";
+    spot.parkedAt = new Date().toISOString();
+    spot.billedHours = 0;
+    spot.approxHours = parseInt(hours.value);
+    bookModal.style.display = "none";
+    state.selected = null;
+    render();
+}
+
+reserveSpot.onclick = () => {
+    const spot = state.spots[state.selected];
+    spot.status = "reserved";
+    spot.approxHours = parseInt(hours.value);
+    bookModal.style.display = "none";
+    state.selected = null;
+    render();
+}
+
+closeParkedInfo.onclick = () => {
+  parkedInfoModal.style.display = "none";
+  state.selected = null;
+};
+
+closeBookedInfo.onclick = () => {
+  bookedInfoModal.style.display = "none";
+  state.selected = null;
+};
+
+cancelBooking.onclick = () => {
+  const spot = state.spots[state.selected];
+  const hours = spot.approxHours || 2; // Default to 2 hours if not set
+  const refundAmount = hours * 50;
+  
+  if (confirm(`Are you sure you want to cancel this booking? ₹${refundAmount} will be refunded.`)) {
+    state.revenue -= refundAmount;
+    spot.status = "free";
+    spot.approxHours = null;
+    bookedInfoModal.style.display = "none";
+    state.selected = null;
+    render();
+    alert(`Booking cancelled. ₹${refundAmount} refunded successfully.`);
+  }
+};
+
+parkOutButton.onclick = () => {
+    const spot = state.spots[state.selected];
+    const parkedAt = new Date(spot.parkedAt);
+    const durationInSeconds = (new Date() - parkedAt) / 1000;
+    const hoursParked = Math.max(1, Math.ceil(durationInSeconds / 8));
+    const rate = spot.status === 'cab' ? 20 : 50;
+    const finalCharge = hoursParked * rate;
+    
+    state.revenue += (finalCharge - (spot.billedHours * rate));
+    
+    spot.status = "free";
+    spot.parkedAt = null;
+    spot.billedHours = 0;
+    spot.approxHours = null;
+    spot.expiring = false;
+    parkedInfoModal.style.display = "none";
+    state.selected = null;
+    render();
+    
+    alert(`Checkout complete! Total charge: ₹${finalCharge}`);
+};
+
+function updateTimers() {
+    let revenueToAdd = 0;
+    const now = new Date();
+    state.spots.forEach(spot => {
+        if ((spot.status === 'parked' || spot.status === 'cab') && spot.parkedAt) {
+            const parkedDate = new Date(spot.parkedAt);
+            const durationInSeconds = (now - parkedDate) / 1000;
+            const hoursParked = Math.floor(durationInSeconds / 8);
+
+            if (hoursParked > spot.billedHours) {
+                const hoursToBill = hoursParked - spot.billedHours;
+                revenueToAdd += hoursToBill * (spot.status === 'cab' ? 20 : 50);
+                spot.billedHours = hoursParked;
+            }
+
+            if (spot.approxHours && hoursParked >= spot.approxHours) {
+                 spot.expiring = true;
+            } else {
+                 spot.expiring = false;
+            }
+
+        }
+    });
+
+    if (revenueToAdd > 0) {
+        state.revenue += revenueToAdd;
+    }
+    render(searchSpot.value);
+}
+
+setInterval(updateTimers, 1000);
+
+</script>
+
+</body>
+</html>
